@@ -2,12 +2,14 @@ from cell import *
 import random, math
 
 class Grid :
-    def __init__(self, size, obstacles = 0.7) :
+    def __init__(self, size, obstacles = 0.7, traps = 0.1, rest = 0.03) :
         self.entries = [[None for i in range(size)] for j in range(size)]
         self.size = size
         self.path = [] # Guaranteed path from S to E
         self.cells = [] # Guaranteed path from portals to path
         self.obstacle_number = obstacles # Percentage of obstacles in remaining cells
+        self.traps = traps
+        self.rest = rest
 
         self.start = (0, 0)
         self.end = (size - 1, size - 1)
@@ -100,8 +102,10 @@ class Grid :
                 x = random.random()
                 if x < self.obstacle_number :
                     self[i, j] = Obstacle()
-                elif x < self.obstacle_number + 0.1 :
+                elif x < self.obstacle_number + self.traps :
                     self[i, j] = Trap()
+                elif x < self.obstacle_number + self.traps + self.rest :
+                    self[i, j] = RestArea()
                 else :
                     self[i, j] = Cell()
 
@@ -143,3 +147,4 @@ class Grid :
             result += "\n"
             i += 1
         return result
+

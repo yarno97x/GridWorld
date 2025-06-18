@@ -1,4 +1,3 @@
-import random
 class Cell :
     def __init__(self, reward = -1) :
         self.reward = reward
@@ -42,4 +41,8 @@ class Start(Cell) :
 
 class End(Cell) :
     def __init__(self):
-        super().__init__(0)
+        super().__init__(100)
+
+class RestArea(Cell) :
+    def __init__(self):
+        super().__init__(-0.2)

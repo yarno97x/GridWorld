@@ -61,8 +61,6 @@ class PolicyAlgorithm :
             for i in range(self.grid.size) :
                 if (i, j) in self.value_function.keys() :
                     key = (i, j)
-                    if isinstance(self.grid[i, j], Portal) :
-                        key = (j, i)
                     if self.value_function[(i, j)] < -1 * self.grid.size ** 2 :
                         x = f"X"
                         result += f"{x:^6}"
@@ -78,7 +76,7 @@ class PolicyAlgorithm :
     def find_direction(self, key) :
         policy = self.policy[key]
         i, j = key
-        x, y = 0, 0
+        y, x = 0, 0
         for coord in policy.keys() :
             if policy[coord] == 1 :
                 x, y = coord
@@ -104,9 +102,7 @@ class PolicyAlgorithm :
                         result += f"{'E':^6}"
                         continue
                     key = (i, j)
-                    if isinstance(self.grid[i, j], Portal) :
-                        key = (j, i)
-                    elif self.value_function[(i, j)] < -1 * self.grid.size ** 2 :
+                    if self.value_function[(i, j)] < -1 * self.grid.size ** 2 :
                         x = f"X"
                         result += f"{x:^6}"
                         continue
@@ -123,7 +119,9 @@ class PolicyAlgorithm :
 
     def derive_policy(self) :
         diffs = []
+        print("HELLO")
         for i in range(self.epochs) :
+            print(i)
             old_policy = copy.deepcopy(self.policy)
             old_value_function = copy.deepcopy(self.value_function)
 
@@ -132,7 +130,9 @@ class PolicyAlgorithm :
             diff = self.value_function_convergence(old_value_function)
             diffs.append(diff)
             if self.policy_convergence(old_policy) and diff < self.tolerance:
-                return np.array(diffs)  
+                print(self.repr_policy())
+                return np.array(diffs) 
+        print(self.repr_policy())
         return np.array(diffs)
 
     def convergence_analysis(self) :
@@ -140,6 +140,49 @@ class PolicyAlgorithm :
         x = np.arange(len(diffs))
         plt.scatter(x, diffs)
         plt.show()
+
+    def value_fct(self) :
+        VF = []
+        for j in range(self.grid.size) :
+            row = []
+            for i in range(self.grid.size) :
+                if (i, j) in self.value_function.keys() :
+                    key = (i, j)
+                    if self.value_function[(i, j)] < -1 * self.grid.size ** 2 :
+                        row.append("X")
+                        continue
+                    row.append(f"{self.value_function[key]}") 
+                else :
+                    row.append("X")
+            VF.append(row)
+        return VF
+
+    def arrow_grid(self):
+        result = []
+        for j in range(self.grid.size):
+            row = []
+            for i in range(self.grid.size):
+                key = (i, j)
+
+                if key not in self.value_function:
+                    row.append("X")
+                    continue
+
+                if key == self.grid.end:
+                    row.append("E")
+                    continue
+
+                if self.value_function[(i, j)] < -1 * self.grid.size ** 2:
+                    row.append("X")
+                    continue
+
+                symbol = self.find_direction(key)
+                if isinstance(self.grid[i, j], Trap):
+                    symbol += "*"
+
+                row.append(symbol)
+            result.append(row)
+        return result
 
 class PolicyIteration(PolicyAlgorithm) :
     def __init__(self, grid, synchronous = True) -> None :
@@ -172,8 +215,9 @@ class PolicyIteration(PolicyAlgorithm) :
             for neighbor in self.policy[base].keys() :
                 # print(self.policy[base][neighbor])
                 value += self.policy[base][neighbor] * self.value_function[neighbor]
-            new_function[base] = int(value)
-        new_function[self.grid.end] = 0
+            new_function[base] = value
+            new_function[self.grid.end] = 0
+            self.new_function[self.grid.size - 1, 0], self.new_function[0, self.grid.size - 1] = self.new_function[0, self.grid.size - 1], self.new_function[self.grid.size - 1, 0] 
         # print(new_function)
         return new_function
 
@@ -189,8 +233,9 @@ class PolicyIteration(PolicyAlgorithm) :
                 # print(self.value_function[neighbor])
                 # print(self.policy[base][neighbor])
                 value += self.policy[base][neighbor] * self.value_function[neighbor]
-            self.value_function[base] = int(value)
+            self.value_function[base] = value
         self.value_function[self.grid.end] = 0
+        self.value_function[self.grid.size - 1, 0], self.value_function[0, self.grid.size - 1] = self.value_function[0, self.grid.size - 1], self.value_function[self.grid.size - 1, 0] 
 
     def policy_improvement(self) :
         # print("IMPROVING")
@@ -217,8 +262,5 @@ class ValueIteration(PolicyAlgorithm) :
     def __init__(self, grid) -> None :
         super().__init__(grid)
 
-g = Grid(5)
-print(g)
-p = PolicyIteration(g)
-p.convergence_analysis()
-print(p.repr_policy())
+    def process(self) :
+        pass
