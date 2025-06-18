@@ -1,8 +1,6 @@
 import random
 class Cell :
     def __init__(self, reward = -1) :
-        if type(reward) not in [int, float] :
-            raise TypeError("Reward must be a numerical value")
         self.reward = reward
         self.neighbors = {}
     
@@ -25,22 +23,22 @@ class Cell :
 
 class Obstacle(Cell) :
     def __init__(self) :
-        super().__init__()
+        super().__init__("X")
 
 class Portal(Cell) :
     def __init__(self, towards):
         if type(towards) != tuple :
             raise TypeError("Portal needs endpoint tuple")
-        super().__init__(0)
+        super().__init__()
         self.towards = towards
 
 class Trap(Cell) :
     def __init__(self) :
-        super().__init__(random.randint(-100, -10))
+        super().__init__(-10)
 
 class Start(Cell) :
     def __init__(self):
-        super().__init__(0)
+        super().__init__(-1)
 
 class End(Cell) :
     def __init__(self):

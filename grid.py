@@ -1,31 +1,27 @@
 from cell import *
 import random, math
-from enum import Enum
-
-class Direction(Enum) :
-    RIGHT = '→' 
-    TOP = '↑' 
-    DOWN = '↓'
-    LEFT = '←'
 
 class Grid :
-    def __init__(self, size, obstacles = 0.4) :
+    def __init__(self, size, obstacles = 0.7) :
         self.entries = [[None for i in range(size)] for j in range(size)]
         self.size = size
-        self.path = []
-        self.cells = []
-        self.obstacle_number = obstacles
+        self.path = [] # Guaranteed path from S to E
+        self.cells = [] # Guaranteed path from portals to path
+        self.obstacle_number = obstacles # Percentage of obstacles in remaining cells
 
         self.start = (0, 0)
         self.end = (size - 1, size - 1)
         self.portal_top = (size - 1, 0)
         self.portal_bottom = (0, size - 1)
 
+        # Creates a guaranteed path from S to E
         self.create_path(self.end, self.start, self.path)
 
+        # Targets closest point to portal
         top_target = self.get_target(self.portal_top)
         bottom_target = self.get_target(self.portal_bottom)
 
+        # Creates a guaranteed path from portals to path
         self.create_path(top_target, self.portal_top, self.cells)
         self.create_path(self.portal_bottom, bottom_target, self.cells)
 
@@ -33,12 +29,15 @@ class Grid :
         self[size - 1, size - 1] = End()
         self[self.portal_top] = Portal(self.portal_bottom)
         self[self.portal_bottom] = Portal(self.portal_top)
+
         self.corners = [(0, 0), (size - 1, size - 1), self.portal_bottom, self.portal_top]
+
+        # Fill the rest with obstacles and switches
         self.random_rest()
         self.paths = self.path + self.cells
+        # Finds accessible cells from each cell
         self.adjacency()
 
-    
     def __getitem__(self, coordinates) :
         if isinstance(coordinates, tuple) :
             return self.entries[coordinates[1]][coordinates[0]]
@@ -52,7 +51,8 @@ class Grid :
             self.entries[coordinates] = x
 
     def __repr__(self) :
-        result = "".join([f"{num:^5}" for num in range(-1, self.size)]) + "\n"
+        corner = "\\"
+        result = f"{corner:^5}" + "".join([f"{num:^5}" for num in range(self.size)]) + "\n"
         i = 0
         for row in self.entries :
             result += f"{i:^5}"
@@ -105,6 +105,9 @@ class Grid :
                 else :
                     self[i, j] = Cell()
 
+    def get_other_portal(self, key) :
+        return (0, self.size - 1) if key == (self.size - 1, 0) else (self.size - 1, 0) 
+
     def get_target(self, portal) :
         distances = [self.distance(portal, point) for point in self.path]
         return self.path[distances.index(min(distances))]
@@ -116,28 +119,27 @@ class Grid :
         for i in range(self.size) :
             for j in range(self.size) :
                 adjacent = []
-                if i != 0 :
+                if i != 0 and not type(self[i - 1, j]) == Obstacle:
                     self[i, j].neighbors["left"] = (i - 1, j)
-                if j != 0 :
+                if j != 0 and not type(self[i, j - 1]) == Obstacle :
                     self[i, j].neighbors["up"] = (i, j - 1)
-                if i != self.size - 1 :
+                if i != self.size - 1 and not type(self[i + 1, j]) == Obstacle :
                     self[i, j].neighbors["right"] = (i + 1, j)
-                if j != self.size - 1 :
+                if j != self.size - 1 and not type(self[i, j + 1]) == Obstacle :
                     self[i, j].neighbors["down"] = (i, j + 1)
-
-    def arrow_gradient(self) :
+        
+        for i in range(self.size) :
+            for j in range(self.size) :
+                if len(self[i, j].neighbors) == 0 :
+                    self[i, j] = Obstacle()
+    
+    def reward_map(self) :
         result = "".join([f"{num:^5}" for num in range(-1, self.size)]) + "\n"
         i = 0
         for row in self.entries :
             result += f"{i:^5}"
             for cell in row :
-                result += f"{random.choice([value.value for value in Direction]):^5}"
+                result += f"{cell.get_reward():^5}"
             result += "\n"
             i += 1
         return result
-
-    def state_value_function(self, policy) :
-        pass
-
-    def state_action_value_function(self, policy) :
-        pass
