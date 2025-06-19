@@ -2,6 +2,8 @@ import numpy as np, copy
 from cell import *
 from grid import Grid
 import matplotlib.pyplot as plt
+from model import Model
+import math
 
 from enum import Enum
 
@@ -12,8 +14,9 @@ class Direction(Enum) :
     LEFT = '←'
 
 class PolicyAlgorithm :
-    def __init__(self, grid, synchronous = False, epochs = 1000, tolerance = 0.01) :
+    def __init__(self, grid, model, synchronous = False, epochs = 1000, tolerance = 0.1) :
         self.grid = grid
+        self.model = model
         # print(self.grid)
         self.epochs = epochs
         self.tolerance = tolerance
@@ -49,11 +52,12 @@ class PolicyAlgorithm :
     def value_function_convergence(self, old_value_function) :
         if len(old_value_function) != len(self.value_function) :
             raise ValueError("Value functions do not have the same size")
-        
+        if self.value_function == old_value_function :
+            return 0
         total = 0
         for key, value in self.value_function.items() :
             total += abs(value - old_value_function[key]) ** 2
-        return total 
+        return math.sqrt(total) 
     
     def repr_value_function(self) :
         corner = "\\"
@@ -130,25 +134,46 @@ class PolicyAlgorithm :
             self.process()
             # print(self.repr_value_function())
             
-            x = True
+            policy_converged = True
             if isinstance(self, PolicyIteration) :
-                x = self.policy_convergence(old_policy)
+                policy_converged = self.policy_convergence(old_policy)
 
             diff = self.value_function_convergence(old_value_function)
+            # print(self.value_function)
+            # print(diff)
             diffs.append(diff)
 
-            if x and diff < self.tolerance:
+            alternating_policies = False
+            if len(diffs) > 4 :
+                alternating_policies = all([abs(diff - diffs[-i-1]) < self.tolerance for i in range(3)])
+
+            if policy_converged and (diff < self.tolerance or alternating_policies):
+                if alternating_policies :
+                    print("Alternating Policies")
                 if isinstance(self, ValueIteration) :
                     self.policy_improvement()
+                if i % 10 == 1 :
+                    suffix = "st"
+                elif i % 10 == 2 :
+                    suffix = "nd"
+                elif i % 10 == 3 :
+                    suffix = "rd"
+                else :
+                    suffix = "th"
+                print(f"Converged on {i}{suffix} iteration")
                 return np.array(diffs) 
+        print(f"Converged on 1000-th iteration")
         if isinstance(self, ValueIteration) :
             self.policy_improvement()
         return np.array(diffs)
 
     def convergence_analysis(self) :
         diffs = self.derive_policy()
+        # print(diffs)
         x = np.arange(len(diffs))
+        # print(x)
         plt.scatter(x, diffs)
+        plt.title("Convergence Analysis of Policy Algorithm")
         plt.show()
 
     def value_fct(self) :
@@ -161,10 +186,12 @@ class PolicyAlgorithm :
                     if self.value_function[(i, j)] < -1 * self.grid.size ** 2 :
                         row.append("X")
                         continue
-                    row.append(f"{self.value_function[key]}") 
+                    row.append(f"{self.value_function[key]:.1f}") 
                 else :
                     row.append("X")
             VF.append(row)
+        # for row in VF :
+        #     print(row)
         return VF
 
     def arrow_grid(self):
@@ -214,8 +241,8 @@ class PolicyAlgorithm :
         self.policy = new_policy  
 
 class PolicyIteration(PolicyAlgorithm) :
-    def __init__(self, grid, synchronous = True) -> None :
-        super().__init__(grid, synchronous)
+    def __init__(self, grid, model, synchronous = True) -> None :
+        super().__init__(grid, model, synchronous)
 
     def process(self) :
         # print("EVALUATING")
@@ -241,11 +268,12 @@ class PolicyIteration(PolicyAlgorithm) :
 
             value = self.grid[base].get_reward()
             for neighbor in self.policy[base].keys() :
+                for true_action in self.model.transitions[(base, neighbor)].keys() :
                 # print(self.policy[base][neighbor])
-                value += self.policy[base][neighbor] * self.value_function[neighbor]
+                    value += self.policy[base][neighbor] * self.model.conditional_probability(base, neighbor, true_action) * self.value_function[neighbor]
             new_function[base] = value
-            new_function[self.grid.end] = 0
-            new_function[self.grid.size - 1, 0], new_function[0, self.grid.size - 1] = new_function[0, self.grid.size - 1], new_function[self.grid.size - 1, 0] 
+        new_function[self.grid.end] = 0
+        new_function[self.grid.size - 1, 0], new_function[0, self.grid.size - 1] = new_function[0, self.grid.size - 1], new_function[self.grid.size - 1, 0] 
         # print(new_function)
         return new_function
 
@@ -261,31 +289,43 @@ class PolicyIteration(PolicyAlgorithm) :
             for neighbor in self.policy[base].keys() :
                 # print(self.value_function[neighbor])
                 # print(self.policy[base][neighbor])
-                value += self.policy[base][neighbor] * self.value_function[neighbor]
+                for true_action in self.model.transitions[(base, neighbor)].keys() :
+                # print(self.policy[base][neighbor])
+                    value += self.policy[base][neighbor] * self.model.conditional_probability(base, neighbor, true_action) * self.value_function[neighbor]
             self.value_function[base] = value
         self.value_function[self.grid.end] = 0
         self.value_function[self.grid.size - 1, 0], self.value_function[0, self.grid.size - 1] = self.value_function[0, self.grid.size - 1], self.value_function[self.grid.size - 1, 0]         
 
 class ValueIteration(PolicyAlgorithm) :
-    def __init__(self, grid, synchronous = False) -> None :
-        super().__init__(grid, synchronous)
+    def __init__(self, grid, model, synchronous = False) -> None :
+        super().__init__(grid, model, synchronous)
         # print(grid.size)
 
     def value_iter_sync(self) :
         new_value_function = self.create_empty_value_function()
-        for base in self.value_function :
+        for base in self.value_function :            
+            if base == self.grid.end :
+                continue
             coords = self.grid[base].neighbors.values()
-            values = [self.grid[base].get_reward() + self.value_function[coord] for coord in coords]
-            new_value_function[base] = round(max(values), 3)
+            vals = {action : self.grid[base].get_reward() for action in coords} 
+            for coord in coords :
+                for true_action in self.model.transitions[(base, tuple(coord))].keys() :
+                    vals[true_action] += self.model.conditional_probability(base, coord, true_action) * self.value_function[true_action]
+            new_value_function[base] = round(max(vals.values()), 3)
         new_value_function[(self.grid.end)] = 0
         return new_value_function
     
     def value_iter_async(self) :
         for base in self.value_function :
+            if base == self.grid.end :
+                continue
             coords = self.grid[base].neighbors.values()
-            values = [self.grid[base].get_reward() + self.value_function[coord] for coord in coords]
-            self.value_function[base] = round(max(values), 3)
-        self.value_function[self.grid.end] = 0
+            vals = {action : self.grid[base].get_reward() for action in coords} 
+            for coord in coords :
+                for true_action in self.model.transitions[(base, tuple(coord))].keys() :
+                    vals[true_action] += self.model.conditional_probability(base, coord, true_action) * self.value_function[true_action]
+            self.value_function[base] = round(max(vals.values()), 3)
+        self.value_function[(self.grid.end)] = 0
 
     def process(self) :
         if self.synchronous :
@@ -294,17 +334,10 @@ class ValueIteration(PolicyAlgorithm) :
             self.value_iter_async()        
 
 if __name__ == "__main__" :
-    g = Grid(5)
-    p = PolicyIteration(g, False)
-    q = PolicyIteration(g, True)
-    r = ValueIteration(g, False)
-    s = ValueIteration(g, True)
-    p.derive_policy()
-    q.derive_policy()
-    r.derive_policy()
-    s.derive_policy()
-    print(p.repr_policy())
-    print(q.repr_policy())
-    print(r.repr_policy())
-    print(s.repr_policy())
+    g = Grid(10)
+    m = Model(g, False)
+    print(m)
+    print(g)
+    q = PolicyIteration(g, m, False)
+    q.convergence_analysis()
             
