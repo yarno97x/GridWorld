@@ -27,15 +27,17 @@ class Grid :
         self.create_path(top_target, self.portal_top, self.cells)
         self.create_path(self.portal_bottom, bottom_target, self.cells)
 
-        self[0, 0] = Start()
-        self[size - 1, size - 1] = End()
-        self[self.portal_top] = Portal(self.portal_bottom)
-        self[self.portal_bottom] = Portal(self.portal_top)
 
         self.corners = [(0, 0), (size - 1, size - 1), self.portal_bottom, self.portal_top]
 
         # Fill the rest with obstacles and switches
         self.random_rest()
+        
+        self[0, 0] = Start()
+        self[size - 1, size - 1] = End()
+        self[self.portal_top] = Portal(self.portal_bottom)
+        self[self.portal_bottom] = Portal(self.portal_top)
+        
         self.paths = self.path + self.cells
         # Finds accessible cells from each cell
         self.adjacency()
@@ -97,17 +99,17 @@ class Grid :
     def random_rest(self) :
         for i in range(self.size) :
             for j in range(self.size) :
-                if any([(i, j) in li for li in [self.corners, self.path, self.cells]]) :
-                    continue
                 x = random.random()
-                if x < self.obstacle_number :
+                self[i, j] = Cell()
+                if any([(i, j) in li for li in [self.corners, self.path, self.cells]]) :
+                    if x < self.traps :
+                        self[i, j] = Trap()
+                    elif x < self.traps + self.rest :
+                        self[i, j] = RestArea()
+                    continue
+                if x < self.traps + self.rest + self.obstacle_number :
                     self[i, j] = Obstacle()
-                elif x < self.obstacle_number + self.traps :
-                    self[i, j] = Trap()
-                elif x < self.obstacle_number + self.traps + self.rest :
-                    self[i, j] = RestArea()
-                else :
-                    self[i, j] = Cell()
+                
 
     def get_other_portal(self, key) :
         return (0, self.size - 1) if key == (self.size - 1, 0) else (self.size - 1, 0) 

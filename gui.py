@@ -134,7 +134,7 @@ class UnsolvedGrid(tk.Frame) :
         tk.Button(self, text="Compute Arrow Gradient", command=lambda: self.show_values(ArrowGradient)).pack()
         tk.Button(self, text="Compute Value Function", command=lambda: self.show_values(ValueFunction)).pack()
 
-        self.width = 800
+        self.width = 1000
         self.canvas = tk.Canvas(self, width=self.width, height=self.width)
         self.draw_grid()
         self.canvas.pack(padx=50)
@@ -172,7 +172,7 @@ class ArrowGradient(tk.Frame) :
         tk.Button(self, text="Value Function",
                   command=lambda: controller.show_frame(ValueFunction)).pack()
     
-        self.width = 800
+        self.width = 1000
         self.canvas = tk.Canvas(self, width=self.width, height=self.width)
         self.canvas.pack(padx=50)
     
