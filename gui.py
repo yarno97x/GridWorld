@@ -92,7 +92,7 @@ class Menu(tk.Frame) :
     def generate(self):
         size = self.size_spinbox.get()  
         obs = int(self.obs_spinbox.get()) / 100
-        traps = int(self.size_spinbox.get()) / 100 
+        traps = int(self.trap_spinbox.get()) / 100 
         rest = int(self.rest_spinbox.get()) / 100
         # print(obs)
         # print(traps)
