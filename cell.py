@@ -1,10 +1,16 @@
+import random
+
 class Cell :
-    def __init__(self, reward = -1) :
-        self.reward = reward
+    def __init__(self, reward_mean = -1, reward_std = 1, deterministic = True) :
+        self.reward_mean = reward_mean
+        self.reward_std = reward_std 
         self.neighbors = {}
+        self.deterministic = deterministic
     
     def get_reward(self) :
-        return self.reward
+        if self.deterministic :
+            return self.reward_mean
+        return random.gauss(self.reward_mean, self.reward_std)
     
     def __repr__(self) :
         if type(self) == Cell :
@@ -33,11 +39,11 @@ class Portal(Cell) :
 
 class Trap(Cell) :
     def __init__(self) :
-        super().__init__(-10)
+        super().__init__(-10, 2)
 
 class Start(Cell) :
     def __init__(self):
-        super().__init__(-1)
+        super().__init__(-5)
 
 class End(Cell) :
     def __init__(self):
@@ -45,4 +51,4 @@ class End(Cell) :
 
 class RestArea(Cell) :
     def __init__(self):
-        super().__init__(-0.2)
+        super().__init__(-2, 1)

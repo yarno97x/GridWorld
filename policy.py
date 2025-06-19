@@ -144,8 +144,8 @@ class PolicyAlgorithm :
             diffs.append(diff)
 
             alternating_policies = False
-            if len(diffs) > 4 :
-                alternating_policies = all([abs(diff - diffs[-i-1]) < self.tolerance for i in range(3)])
+            if len(diffs) > self.grid.size :
+                alternating_policies = all([abs(diff - diffs[-i-1]) < self.tolerance for i in range(self.grid.size)])
 
             if policy_converged and (diff < self.tolerance or alternating_policies):
                 if alternating_policies :

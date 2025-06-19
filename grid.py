@@ -110,7 +110,6 @@ class Grid :
                 if x < self.traps + self.rest + self.obstacle_number :
                     self[i, j] = Obstacle()
                 
-
     def get_other_portal(self, key) :
         return (0, self.size - 1) if key == (self.size - 1, 0) else (self.size - 1, 0) 
 
