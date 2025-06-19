@@ -14,6 +14,8 @@ class Visualizer(tk.Tk) :
         self.obstacles = 0.5
         self.rest = 0.05
         self.traps = 0.1
+        self.synchronous = tk.BooleanVar()
+        self.deterministic = tk.BooleanVar()
         self.generate_grid()
         self.frames = {}
 
@@ -41,14 +43,14 @@ class Visualizer(tk.Tk) :
 
     def generate_grid(self) :
         self.grid = Grid(self.n, self.obstacles, self.traps, self.rest)
-        self.model = Model(self.grid, False)
+        self.model = Model(self.grid, self.deterministic)
 
     def find_policy(self, PI) :
         if PI :
             print("PI")
-            self.p = PolicyIteration(self.grid, self.model, False)
+            self.p = PolicyIteration(self.grid, model=self.model, synchronous=self.synchronous)
         else :
-            self.p = ValueIteration(self.grid, self.model)
+            self.p = ValueIteration(self.grid, model=self.model, synchronous=self.synchronous)
         self.p.convergence_analysis()
 
     def get_color(self, cell) :
@@ -90,7 +92,16 @@ class Menu(tk.Frame) :
         self.rest_spinbox = tk.Spinbox(self, from_=0, to=100, textvariable=tk.StringVar(value="2"))  
         self.rest_spinbox.pack()
 
+        self.deterministic_button = tk.Checkbutton(self, text="Deterministic Model", variable=controller.deterministic)
+        self.deterministic_button.pack()
+
+        self.sync_button = tk.Checkbutton(self, text="Synchronous Computing", variable=controller.synchronous)
+        self.sync_button.pack()
+
     def generate(self):
+        self.controller.deterministic.get()
+        self.controller.synchronous.get()
+
         size = self.size_spinbox.get()  
         obs = int(self.obs_spinbox.get()) / 100
         traps = int(self.trap_spinbox.get()) / 100 
