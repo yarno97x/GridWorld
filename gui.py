@@ -43,14 +43,14 @@ class Visualizer(tk.Tk) :
 
     def generate_grid(self) :
         self.grid = Grid(self.n, self.obstacles, self.traps, self.rest)
-        self.model = Model(self.grid, self.deterministic)
+        self.model = Model(self.grid, not self.deterministic)
 
     def find_policy(self, PI) :
         if PI :
             print("PI")
-            self.p = PolicyIteration(self.grid, model=self.model, synchronous=self.synchronous)
+            self.p = PolicyIteration(self.grid, model=self.model, synchronous= not self.synchronous)
         else :
-            self.p = ValueIteration(self.grid, model=self.model, synchronous=self.synchronous)
+            self.p = ValueIteration(self.grid, model=self.model, synchronous= not self.synchronous)
         self.p.convergence_analysis()
 
     def get_color(self, cell) :
@@ -80,22 +80,22 @@ class Menu(tk.Frame) :
         self.size_spinbox = tk.Spinbox(self, from_=3, to=15, textvariable=tk.StringVar(value="15"))  
         self.size_spinbox.pack()
 
-        tk.Label(self, text="Obstacles:").pack()
+        tk.Label(self, text="Obstacle %:").pack()
         self.obs_spinbox = tk.Spinbox(self, from_=0, to=100, textvariable=tk.StringVar(value="50"))  
         self.obs_spinbox.pack()
 
-        tk.Label(self, text="Traps:").pack()
+        tk.Label(self, text="Trap %:").pack()
         self.trap_spinbox = tk.Spinbox(self, from_=0, to=100, textvariable=tk.StringVar(value="10"))  
         self.trap_spinbox.pack()
         
-        tk.Label(self, text="Rest areas:").pack()
+        tk.Label(self, text="Neutral zone %:").pack()
         self.rest_spinbox = tk.Spinbox(self, from_=0, to=100, textvariable=tk.StringVar(value="2"))  
         self.rest_spinbox.pack()
 
-        self.deterministic_button = tk.Checkbutton(self, text="Deterministic Model", variable=controller.deterministic)
+        self.deterministic_button = tk.Checkbutton(self, text="Stochastic Transitions", variable=controller.deterministic)
         self.deterministic_button.pack()
 
-        self.sync_button = tk.Checkbutton(self, text="Synchronous Computing", variable=controller.synchronous)
+        self.sync_button = tk.Checkbutton(self, text="Asynchronous ", variable=controller.synchronous)
         self.sync_button.pack()
 
     def generate(self):
