@@ -134,8 +134,8 @@ class UnsolvedGrid(tk.Frame) :
         tk.Button(self, text="Compute Arrow Gradient", command=lambda: self.show_values(ArrowGradient)).pack()
         tk.Button(self, text="Compute Value Function", command=lambda: self.show_values(ValueFunction)).pack()
 
-        self.width = 1000
-        self.canvas = tk.Canvas(self, width=self.width, height=self.width)
+        self.width = 800
+        self.canvas = tk.Canvas(self, width=self.width , height=self.width)
         self.draw_grid()
         self.canvas.pack(padx=50)
 
@@ -153,7 +153,7 @@ class UnsolvedGrid(tk.Frame) :
     def draw_grid(self):
         self.canvas.delete("all")
         g = self.controller.grid
-        cell_size = self.width / (g.size * 1.8)
+        cell_size = self.width / (g.size * 1.6)
         for i in range(g.size):
             for j in range(g.size):
                 cell = g[j, i]
@@ -172,7 +172,7 @@ class ArrowGradient(tk.Frame) :
         tk.Button(self, text="Value Function",
                   command=lambda: controller.show_frame(ValueFunction)).pack()
     
-        self.width = 1000
+        self.width = 800
         self.canvas = tk.Canvas(self, width=self.width, height=self.width)
         self.canvas.pack(padx=50)
     
@@ -182,7 +182,7 @@ class ArrowGradient(tk.Frame) :
             return
         self.canvas.delete("all")
         g = self.controller.grid
-        cell_size = self.width / (g.size * 1.8)
+        cell_size = self.width / (g.size * 1.3)
         for i in range(g.size):
             for j in range(g.size):
                 cell = g[i, j]
@@ -198,7 +198,7 @@ class ArrowGradient(tk.Frame) :
                 text_y = (y0 + y1) / 2
 
                 x = self.controller.p.arrow_grid()[j][i]
-                self.canvas.create_text(text_x, text_y, text=f"{x}", fill="black")
+                self.canvas.create_text(text_x, text_y, text=f"{x}", fill="black", font=("Helvetica", int(cell_size / 4)))
 
 class ValueFunction(tk.Frame) :
     def __init__(self, parent, controller) :
@@ -220,7 +220,7 @@ class ValueFunction(tk.Frame) :
             return
         self.canvas.delete("all")
         g = self.controller.grid
-        cell_size = self.width / (g.size * 1.8)
+        cell_size = self.width / (g.size * 1.3)
         for i in range(g.size):
             for j in range(g.size):
                 cell = g[i, j]
@@ -230,16 +230,15 @@ class ValueFunction(tk.Frame) :
                 x1 = (i + 1) * cell_size
                 y1 = (j + 1) * cell_size
 
-                # Draw rectangle
                 self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline="gray")
 
-                # Draw text centered inside the rectangle
                 text_x = (x0 + x1) / 2
                 text_y = (y0 + y1) / 2
 
                 # For example, display cell coordinates or any property
                 x = self.controller.p.value_fct()[j][i]
-                self.canvas.create_text(text_x, text_y, text=f"{x}", fill="black")
+                # x = f"{x:.1f}" if isinstance(x, float) else str(x)
+                self.canvas.create_text(text_x, text_y, text=f"{x}", fill="black", font=("Helvetica", int(cell_size / 4)))
 
 if __name__ == "__main__" :
     app = Visualizer()
