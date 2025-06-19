@@ -51,4 +51,4 @@ class End(Cell) :
 
 class RestArea(Cell) :
     def __init__(self):
-        super().__init__(-2, 1)
+        super().__init__(0)

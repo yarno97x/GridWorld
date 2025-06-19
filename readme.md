@@ -25,4 +25,6 @@ A simple, extensible GridWorld environment for experimenting with classic reinfo
   - Dedicated **policy arrow gradient page**  
   - **Convergence graphs** generated automatically to track algorithm progress  
 
-![Demo](demo.gif)
+[![GridWorld Demo](https://img.youtube.com/vi/your_video_id/0.jpg)](https://youtu.be/9Do_KB7WzRQ)
+
+
