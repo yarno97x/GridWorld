@@ -41,14 +41,15 @@ class Visualizer(tk.Tk) :
 
     def generate_grid(self) :
         self.grid = Grid(self.n, self.obstacles, self.traps, self.rest)
+        self.model = Model(self.grid, False)
 
     def find_policy(self, PI) :
         if PI :
             print("PI")
-            self.p = PolicyIteration(self.grid, False)
+            self.p = PolicyIteration(self.grid, self.model, False)
         else :
-            self.p = ValueIteration(self.grid)
-        self.p.derive_policy()
+            self.p = ValueIteration(self.grid, self.model)
+        self.p.convergence_analysis()
 
     def get_color(self, cell) :
         if isinstance(cell, Obstacle) :
@@ -74,7 +75,7 @@ class Menu(tk.Frame) :
         tk.Button(self, text="Generate a grid", command= lambda : self.generate()).pack()
 
         tk.Label(self, text="Grid size:").pack()
-        self.size_spinbox = tk.Spinbox(self, from_=3, to=20, textvariable=tk.StringVar(value="15"))  
+        self.size_spinbox = tk.Spinbox(self, from_=3, to=15, textvariable=tk.StringVar(value="15"))  
         self.size_spinbox.pack()
 
         tk.Label(self, text="Obstacles:").pack()
@@ -98,7 +99,7 @@ class Menu(tk.Frame) :
         # print(traps)
         # print(rest)
         # print(f"% is {traps + obs + rest}")
-        if traps + obs + rest > 1 :
+        if traps + obs + rest > 1:
             raise ValueError("Please enter a valid integer.")
         try:
             self.controller.n = int(size)
@@ -238,7 +239,7 @@ class ValueFunction(tk.Frame) :
                 # For example, display cell coordinates or any property
                 x = self.controller.p.value_fct()[j][i]
                 # x = f"{x:.1f}" if isinstance(x, float) else str(x)
-                self.canvas.create_text(text_x, text_y, text=f"{x}", fill="black", font=("Helvetica", int(cell_size / 4)))
+                self.canvas.create_text(text_x, text_y, text=f"{x}", fill="black", font=("Helvetica", int(cell_size / 5)))
 
 if __name__ == "__main__" :
     app = Visualizer()
