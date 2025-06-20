@@ -1,9 +1,8 @@
-from grid import Grid
 import copy
 from cell import Obstacle, End
 
 class Model :
-    def __init__(self, grid, deterministic, epsilon = 0.2):
+    def __init__(self, grid, deterministic, epsilon = 0.4):
         """Constructs either a deterministic or stochastic model of the environment
 
         Args:
@@ -40,10 +39,3 @@ class Model :
             result += f"{trans}\n"
         return result
 
-
-
-if __name__ == "__main__" :
-    g = Grid(4)
-    m = Model(g, False, 0.2)
-    print(m)
-    print(g)

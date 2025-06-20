@@ -39,16 +39,16 @@ class Portal(Cell) :
 
 class Trap(Cell) :
     def __init__(self) :
-        super().__init__(-10, 2)
+        super().__init__(-10)
 
 class Start(Cell) :
     def __init__(self):
-        super().__init__(-5)
+        super().__init__(reward_mean=-1)
 
 class End(Cell) :
     def __init__(self):
-        super().__init__(100)
+        super().__init__(reward_mean=10000)
 
 class RestArea(Cell) :
     def __init__(self):
-        super().__init__(0)
+        super().__init__(reward_mean=-0.5)

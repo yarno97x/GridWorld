@@ -7,7 +7,6 @@ class Visualizer(tk.Tk) :
     def __init__(self):
         super().__init__()
         self.title("GridWorld GUI")
-
         self.container = tk.Frame(self)
         self.container.pack(fill="both", expand=True)
         self.n = 3
@@ -27,7 +26,6 @@ class Visualizer(tk.Tk) :
         self.show_frame(Menu)    
     
     def show_frame(self, page_class):
-
         if page_class not in self.frames:
             frame = page_class(self.container, self)
             self.frames[page_class] = frame
@@ -47,7 +45,6 @@ class Visualizer(tk.Tk) :
 
     def find_policy(self, PI) :
         if PI :
-            print("PI")
             self.p = PolicyIteration(self.grid, model=self.model, synchronous= not self.synchronous)
         else :
             self.p = ValueIteration(self.grid, model=self.model, synchronous= not self.synchronous)
@@ -106,12 +103,8 @@ class Menu(tk.Frame) :
         obs = int(self.obs_spinbox.get()) / 100
         traps = int(self.trap_spinbox.get()) / 100 
         rest = int(self.rest_spinbox.get()) / 100
-        # print(obs)
-        # print(traps)
-        # print(rest)
-        # print(f"% is {traps + obs + rest}")
         if traps + obs + rest > 1:
-            raise ValueError("Please enter a valid integer.")
+            return
         try:
             self.controller.n = int(size)
             self.controller.obstacles = obs
@@ -128,18 +121,14 @@ class Menu(tk.Frame) :
     def draw_grid(self) :  
         self.controller.frames[UnsolvedGrid].draw_grid()
 
-
-
 class UnsolvedGrid(tk.Frame) :
     def __init__(self, parent, controller) :
         super().__init__(parent)
         self.controller = controller
 
         tk.Label(self, text="Unsolved Grid").pack(pady=10)
-        tk.Button(self, text="Back to Menu",
-                  command=lambda: controller.show_frame(Menu)).pack()
-        tk.Button(self, text="Regenerate",
-                  command=self.regen).pack()
+        tk.Button(self, text="Back to Menu", command=lambda: controller.show_frame(Menu)).pack()
+        tk.Button(self, text="Regenerate", command=self.regen).pack()
         tk.Button(self, text="Compute Policy Iteration", command=lambda : self.controller.find_policy(True)).pack()
         tk.Button(self, text="Compute Value Iteration", command=lambda :self.controller.find_policy(False)).pack()
 
@@ -170,9 +159,7 @@ class UnsolvedGrid(tk.Frame) :
             for j in range(g.size):
                 cell = g[j, i]
                 color = self.controller.get_color(cell)
-                self.canvas.create_rectangle(j*cell_size, i*cell_size,
-                                             (j+1)*cell_size, (i+1)*cell_size,
-                                             fill=color, outline="gray")
+                self.canvas.create_rectangle(j*cell_size, i*cell_size, (j+1)*cell_size, (i+1)*cell_size, fill=color, outline="gray")
 
 class ArrowGradient(tk.Frame) :
     def __init__(self, parent, controller) :
@@ -192,6 +179,7 @@ class ArrowGradient(tk.Frame) :
         if not hasattr(self.controller, "p") or self.controller.p is None:
             print("Policy not yet computed.")
             return
+        
         self.canvas.delete("all")
         g = self.controller.grid
         cell_size = self.width / (g.size * 1.3)

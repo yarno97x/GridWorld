@@ -2,7 +2,7 @@ from cell import *
 import random, math
 
 class Grid :
-    def __init__(self, size, obstacles = 0.7, traps = 0.1, rest = 0.03) :
+    def __init__(self, size, obstacles = 0.5, traps = 0.1, rest = 0.05) :
         self.entries = [[None for i in range(size)] for j in range(size)]
         self.size = size
         self.path = [] # Guaranteed path from S to E
@@ -31,6 +31,7 @@ class Grid :
         self.corners = [(0, 0), (size - 1, size - 1), self.portal_bottom, self.portal_top]
 
         # Fill the rest with obstacles and switches
+        self.obstacles = []
         self.random_rest()
         
         self[0, 0] = Start()
@@ -101,14 +102,14 @@ class Grid :
             for j in range(self.size) :
                 x = random.random()
                 self[i, j] = Cell()
-                if any([(i, j) in li for li in [self.corners, self.path, self.cells]]) :
-                    if x < self.traps :
-                        self[i, j] = Trap()
-                    elif x < self.traps + self.rest :
-                        self[i, j] = RestArea()
-                    continue
-                if x < self.traps + self.rest + self.obstacle_number :
-                    self[i, j] = Obstacle()
+                if not any([(i, j) in li for li in [self.corners, self.path, self.cells]]) :
+                    if x < self.obstacle_number :
+                        self[i, j] = Obstacle()
+                        self.obstacles.append((i, j))
+                if x < self.obstacle_number + self.traps and x > self.obstacle_number:
+                    self[i, j] = Trap()
+                if x < self.obstacle_number + self.traps + self.rest and x > self.obstacle_number + self.traps:
+                    self[i, j] = RestArea()
                 
     def get_other_portal(self, key) :
         return (0, self.size - 1) if key == (self.size - 1, 0) else (self.size - 1, 0) 
@@ -123,7 +124,6 @@ class Grid :
     def adjacency(self) :
         for i in range(self.size) :
             for j in range(self.size) :
-                adjacent = []
                 if i != 0 and not type(self[i - 1, j]) == Obstacle:
                     self[i, j].neighbors["left"] = (i - 1, j)
                 if j != 0 and not type(self[i, j - 1]) == Obstacle :
